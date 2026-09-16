@@ -3147,7 +3147,7 @@ apply_mode() {
   case "$MODE" in
     normal)
       set_mode_default ENFORCE_EAGER 0
-      set_mode_default DISABLE_LOG_STATS 1
+      set_mode_default DISABLE_LOG_STATS 0
       set_mode_default VLLM_SM75_SPEC_SYNC_MODE safe
       set_mode_default VLLM_ALLOW_MAMBA_SPEC_FULL_CUDAGRAPH 0
       ;;
