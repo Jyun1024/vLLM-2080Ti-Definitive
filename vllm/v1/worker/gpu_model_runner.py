@@ -432,6 +432,16 @@ class GPUModelRunner(
         self.sm75_spec_syncs_enabled = sync_mode == "safe" or (
             sync_mode == "auto" and cache_dtype.startswith("turboquant_")
         )
+        # Log the value the worker actually resolved, not the one the launcher
+        # exported: the sync only exists to prevent the async-spec decode race
+        # that trips later attention kernels with an illegal memory access, so
+        # whether it is armed matters when debugging such a crash.
+        logger.info_once(
+            "SM75 spec sync policy: mode=%s enabled=%s (kv_cache_dtype=%s)",
+            sync_mode,
+            self.sm75_spec_syncs_enabled,
+            cache_dtype,
+        )
 
         self.is_pooling_model = model_config.runner_type == "pooling"
         self.enable_prompt_embeds = model_config.enable_prompt_embeds
