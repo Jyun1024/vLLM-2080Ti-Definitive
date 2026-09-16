@@ -17,6 +17,20 @@ Edition. It is separate from the upstream vLLM package version.
   `VLLM_FLASHINFER_WORKSPACE_BUFFER_SIZE` (~394 MiB) workspace after the KV cache
   had claimed the remaining GPU memory, which could OOM the first request at high
   `--gpu-memory-utilization`.
+- Bounds-checks the GDN recurrent state slots and the `mamba_cache_mode=align`
+  state migration. Both paths handed unvalidated indices to raw pointer
+  accesses that CUDA does not bounds-check, so a stale slot became an
+  unmapped-page write (`Xid 31 ... FAULT_PDE ACCESS_TYPE_VIRT_WRITE`) that killed
+  Worker_TP0, then EngineCore, and surfaced to clients as `EngineDeadError`.
+  Out-of-range slots are now skipped (the store is dropped and the decode
+  returns a defined zero output; an invalid migration is logged with its block
+  indices and skipped) instead of taking the engine down. Set
+  `VLLM_GDN_STATE_INDEX_CHECK=1` to additionally report the offending slot
+  indices from the host.
+- Aligns the Qwen GDN gating inputs (`a`/`b`) with speculative tokens, backporting
+  upstream #51812. Batches that mixed speculative tokens with other tokens fed
+  the spec tokens the decay/beta of unrelated tokens and drifted the recurrent
+  state.
 
 ## v0.1.17 - 2026-08-24
 
