@@ -31,6 +31,11 @@ Edition. It is separate from the upstream vLLM package version.
   upstream #51812. Batches that mixed speculative tokens with other tokens fed
   the spec tokens the decay/beta of unrelated tokens and drifted the recurrent
   state.
+- Adds the validated `qwen27b/normal/fp8/fp16kv-112K-mtp3-text-only-ok.env`
+  profile, which was being served but was not tracked, and tracks the
+  `systemd/` user service that runs it (including its stop hook and GPU
+  precheck). Keeps per-iteration stats enabled in `normal` mode so the per-step
+  Engine/SpecDecoding lines stay available in `run-logs/` for post-mortems.
 
 ## v0.1.17 - 2026-08-24
 
