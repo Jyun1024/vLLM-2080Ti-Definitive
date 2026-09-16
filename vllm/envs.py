@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     VLLM_TRACE_FUNCTION: int = 0
     VLLM_USE_FLASHINFER_SAMPLER: bool = True
     VLLM_SM75_SPEC_SYNC_MODE: Literal["auto", "safe", "nosync"] = "auto"
+    VLLM_GDN_STATE_INDEX_CHECK: bool = False
     VLLM_INT8KV_FA_PREFILL: bool = False
     VLLM_INT8KV_FLASHINFER_PREFILL_BACKEND: str = "fa2"
     VLLM_INT8KV_FA_RAGGED_PREFILL: bool = True
@@ -775,6 +776,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
         )()
         or "auto"
     ).lower(),
+    # Debug aid for the hybrid GDN/Mamba speculative-decode path. Costs a
+    # host-side device synchronisation, so it is off by default. Enable it when
+    # chasing an Xid 31 / illegal-memory-access crash: the GDN state slot
+    # indices are then validated on the host and reported with the offending
+    # values instead of faulting on the GPU.
+    "VLLM_GDN_STATE_INDEX_CHECK": lambda: bool(
+        int(os.getenv("VLLM_GDN_STATE_INDEX_CHECK", "0"))
+    ),
     # Fork-specific SM75/Qwen attention and speculative decode controls.
     "VLLM_INT8KV_FA_PREFILL": lambda: bool(
         int(os.getenv("VLLM_INT8KV_FA_PREFILL", "0"))
