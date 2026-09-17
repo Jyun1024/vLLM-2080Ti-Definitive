@@ -36,6 +36,14 @@ Edition. It is separate from the upstream vLLM package version.
   `systemd/` user service that runs it (including its stop hook and GPU
   precheck). Keeps per-iteration stats enabled in `normal` mode so the per-step
   Engine/SpecDecoding lines stay available in `run-logs/` for post-mortems.
+- Makes the launcher's startup smoke test authenticate itself. When
+  `VLLM_API_KEY` is set for the API server, the smoke requests to `/v1/models`
+  and `/v1/chat/completions` now carry `Authorization: Bearer $VLLM_API_KEY`.
+  Previously a server launched with `VLLM_API_KEY` answered the smoke request
+  with `401 Unauthorized`, so the launcher reported `SMOKE FAILED` and killed the
+  healthy server; enabling API key authentication therefore required bypassing
+  the launcher. Without the variable in the environment the smoke test is
+  unchanged.
 
 ## v0.1.17 - 2026-08-24
 

@@ -3684,11 +3684,15 @@ smoke_test() {
   local model_id model_output
   model_output=$("$RUNTIME_ROOT/.venv/bin/python" - "$url_host" "$PORT" <<'PY'
 import json
+import os
 import sys
 import urllib.request
 
 host, port = sys.argv[1], sys.argv[2]
-with urllib.request.urlopen(f"http://{host}:{port}/v1/models", timeout=30) as resp:
+api_key = os.environ.get("VLLM_API_KEY")
+auth = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+req = urllib.request.Request(f"http://{host}:{port}/v1/models", headers=auth)
+with urllib.request.urlopen(req, timeout=30) as resp:
     data = json.load(resp)
 items = data.get("data") or []
 if not items:
@@ -3701,10 +3705,12 @@ PY
 
   "$RUNTIME_ROOT/.venv/bin/python" - "$url_host" "$PORT" "$model_id" <<'PY'
 import json
+import os
 import sys
 import urllib.request
 
 host, port, model_id = sys.argv[1], sys.argv[2], sys.argv[3]
+api_key = os.environ.get("VLLM_API_KEY")
 payload = {
     "model": model_id,
     "messages": [{"role": "user", "content": "Reply with OK."}],
@@ -3716,7 +3722,10 @@ payload = {
 req = urllib.request.Request(
     f"http://{host}:{port}/v1/chat/completions",
     data=json.dumps(payload).encode("utf-8"),
-    headers={"Content-Type": "application/json"},
+    headers={
+        "Content-Type": "application/json",
+        **({"Authorization": f"Bearer {api_key}"} if api_key else {}),
+    },
     method="POST",
 )
 with urllib.request.urlopen(req, timeout=120) as resp:
